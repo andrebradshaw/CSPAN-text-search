@@ -15,3 +15,4 @@ async function getCC(){
 getCC()
 
 
+//https://www.c-span.org/video/?21876-1/health-care-cost-containment-day-1&beta=&action=getTranscript&transcriptType=cc&service-url=%2Fcommon%2Fservices%2FprogramSpeakers.php&progid=15864&appearance-filter=&personSkip=0&ccSkip=0&transcriptSpeaker=&transcriptQuery=
