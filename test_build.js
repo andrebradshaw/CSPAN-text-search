@@ -2,27 +2,58 @@ var reg = (o, n) => o ? o[n] : '';
 var cn = (o, s) => o ? o.getElementsByClassName(s) : console.log(o);
 var tn = (o, s) => o ? o.getElementsByTagName(s) : console.log(o);
 var gi = (o, s) => o ? o.getElementById(s) : console.log(o);
+var rando = (n) => Math.round(Math.random() * n);
+var unq = (arr) => arr.filter((e, p, a) => a.indexOf(e) == p);
+var delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-async function getCC(){
-  var refUrl = reg(/c-span.org\/fragments\/convertCap.php\?.+?(?=')/.exec(document.body.innerHTML),0);
-  var res = await fetch("https://www."+refUrl);
-  
-  var text = await res.text();
-  var textArray = text.split(/\b(?=\d\d:\d\d:\d\d\.\d+.+?-->)/)
-  console.log(textArray);
+
+function getSearchResultsVideoIds(){
+  var listitems = cn(document,'onevid') && cn(document,'onevid').length ? Array.from(cn(document,'onevid')) : null;
+  var buildlinks = listitems ? listitems.map(el=> {
+    return {
+		url: tn(el,'a') && tn(el,'a').length ? tn(el,'a')[0].href : null,
+		id: cn(el,'excerpt') && cn(el,'excerpt').length && cn(el,'excerpt')[0].getAttribute('id') ? reg(/(?<=cc).+/.exec(cn(el,'excerpt')[0].getAttribute('id')),0) : null,
+ 	};
+  }) : null;
+  return buildlinks;
 }
 
-getCC()
-
-
-//https://www.c-span.org/video/?21876-1/health-care-cost-containment-day-1&beta=&action=getTranscript&transcriptType=cc&service-url=%2Fcommon%2Fservices%2FprogramSpeakers.php&progid=15864&appearance-filter=&personSkip=0&ccSkip=0&transcriptSpeaker=&transcriptQuery=
-
-
-async function cspanCC2(){
-  var res = await fetch('https://www.c-span.org/video/?21876-1/health-care-cost-containment-day-1&beta=&action=getTranscript&transcriptType=cc&service-url=%2Fcommon%2Fservices%2FprogramSpeakers.php&progid=15864&appearance-filter=&personSkip=0&ccSkip=0&transcriptSpeaker=&transcriptQuery=');
+async function cspanCC2(url){
+  var res = await fetch(url);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text,'text/html');
-  var transcript = Array.from(document.getElementsByClassName('short_transcript')).map(el=> el.innerText).reduce((a,b)=> a+b);
-  console.log(transcript)
+  var transcript = Array.from(tn(document,'tr')).map(el=> {
+	return {
+	  timestamp: tn(el,'th')[0].innerText,
+	  text: cn(el,'short_transcript')[0].innerText
+    };
+  }); 
+  return transcript;
 }
+
+async function mergeTextContentWithVideoSearchResults(){
+  var buildlinks = getSearchResultsVideoIds();
+  console.log(buildlinks);
+  for(var i=0; i<buildlinks.length; i++){
+    if(buildlinks[i].url && buildlinks[i].id){
+      var url = `${buildlinks[i].url}&beta=&action=getTranscript&transcriptType=cc&service-url=%2Fcommon%2Fservices%2FprogramSpeakers.php&progid=${buildlinks[i].id}&appearance-filter=&personSkip=0&ccSkip=0&transcriptSpeaker=&transcriptQuery=`;
+      console.log(url)
+      var res = await cspanCC2(url);
+      buildlinks[i]['timestamped'] = res;
+      buildlinks[i]['fulltext'] = res && res.length ? res.reduce((a,b)=> a.text + b.text) : null;
+    }
+    await delay(rando(666));
+  }
+  console.log(buildlinks);
+}
+
 cspanCC2();
+
+// getSearchResultsVideoIds()
+
+mergeTextContentWithVideoSearchResults();
+
+// var query = "make some hard choices";
+// window.open(`https://www.c-span.org/search/?sdate=01%2F01%2F1917&edate=01%2F01%2F2019&searchtype=Videos&sort=Least+Recent+Event&text=1&addedterm%5B%5D=%22${encodeURIComponent(query)}%22&personid%5B%5D=994`,'_self');
+
+
