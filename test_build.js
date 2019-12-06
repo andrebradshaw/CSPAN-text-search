@@ -22,7 +22,7 @@ async function cspanCC2(url){
   var res = await fetch(url);
   var text = await res.text();
   var doc = new DOMParser().parseFromString(text,'text/html');
-  var transcript = Array.from(tn(document,'tr')).map(el=> {
+  var transcript = Array.from(tn(doc,'tr')).map(el=> {
 	return {
 	  timestamp: tn(el,'th')[0].innerText,
 	  text: cn(el,'short_transcript')[0].innerText
@@ -33,12 +33,11 @@ async function cspanCC2(url){
 
 async function mergeTextContentWithVideoSearchResults(){
   var buildlinks = getSearchResultsVideoIds();
-  console.log(buildlinks);
   for(var i=0; i<buildlinks.length; i++){
     if(buildlinks[i].url && buildlinks[i].id){
       var url = `${buildlinks[i].url}&beta=&action=getTranscript&transcriptType=cc&service-url=%2Fcommon%2Fservices%2FprogramSpeakers.php&progid=${buildlinks[i].id}&appearance-filter=&personSkip=0&ccSkip=0&transcriptSpeaker=&transcriptQuery=`;
-      console.log(url)
       var res = await cspanCC2(url);
+console.log(res);
       buildlinks[i]['timestamped'] = res;
       buildlinks[i]['fulltext'] = res && res.length ? res.reduce((a,b)=> a.text + b.text) : null;
     }
@@ -49,11 +48,7 @@ async function mergeTextContentWithVideoSearchResults(){
 
 cspanCC2();
 
-// getSearchResultsVideoIds()
-
 mergeTextContentWithVideoSearchResults();
 
-// var query = "make some hard choices";
+// var query = "medicare for all";
 // window.open(`https://www.c-span.org/search/?sdate=01%2F01%2F1917&edate=01%2F01%2F2019&searchtype=Videos&sort=Least+Recent+Event&text=1&addedterm%5B%5D=%22${encodeURIComponent(query)}%22&personid%5B%5D=994`,'_self');
-
-
