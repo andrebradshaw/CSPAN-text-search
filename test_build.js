@@ -39,7 +39,7 @@ async function mergeTextContentWithVideoSearchResults(){
       var res = await cspanCC2(url);
 console.log(res);
       buildlinks[i]['timestamped'] = res;
-      buildlinks[i]['fulltext'] = res && res.length ? res.reduce((a,b)=> a.text + b.text) : null;
+      buildlinks[i]['fulltext'] = res && res.length ? res.map(el=> el.text).reduce((a,b)=> a+b) : null;
     }
     await delay(rando(666));
   }
